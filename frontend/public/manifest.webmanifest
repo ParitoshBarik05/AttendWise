@@ -1,0 +1,17 @@
+{
+  "name": "AttendWise",
+  "short_name": "AttendWise",
+  "description": "Student attendance and timetable manager",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f6f7",
+  "theme_color": "#243b53",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

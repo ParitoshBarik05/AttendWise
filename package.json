@@ -1,0 +1,15 @@
+{
+  "name": "attendwise",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm:server\" \"npm:client\"",
+    "server": "npm --prefix backend run dev",
+    "client": "npm --prefix frontend run dev",
+    "test": "npm --prefix backend test",
+    "keys:push": "npm --prefix backend run push:keys"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

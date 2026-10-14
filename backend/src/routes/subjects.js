@@ -1,0 +1,13 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import Subject from '../models/Subject.js';
+import ClassSession from '../models/ClassSession.js';
+import TimetableSlot from '../models/TimetableSlot.js';
+import { requireAuth } from '../middleware/auth.js';
+const router = Router(); router.use(requireAuth);
+const schema = z.object({ name: z.string().trim().min(1).max(100), code: z.string().max(30).optional(), faculty: z.string().max(100).optional(), target: z.coerce.number().min(1).max(100).default(75) });
+router.get('/', async (req,res) => res.json(await Subject.find({ user:req.userId }).sort({ name:1 })));
+router.post('/', async (req,res,next) => { try { const d=schema.parse(req.body); res.status(201).json(await Subject.create({ ...d, user:req.userId })); } catch(e) { if(e.name==='ZodError') return res.status(400).json({message:e.issues[0].message}); if(e.code===11000) return res.status(409).json({message:'A subject with this name already exists.'}); next(e); } });
+router.put('/:id', async (req,res,next) => { try { const d=schema.partial().parse(req.body); const item=await Subject.findOneAndUpdate({ _id:req.params.id,user:req.userId },d,{new:true,runValidators:true}); if(!item) return res.status(404).json({message:'Subject not found.'}); res.json(item); } catch(e) { if(e.name==='ZodError') return res.status(400).json({message:e.issues[0].message}); next(e); } });
+router.delete('/:id', async (req,res) => { const item=await Subject.findOneAndDelete({_id:req.params.id,user:req.userId}); if(!item) return res.status(404).json({message:'Subject not found.'}); await Promise.all([TimetableSlot.deleteMany({subject:item._id,user:req.userId}),ClassSession.deleteMany({subject:item._id,user:req.userId})]); res.json({message:'Subject and its related attendance records deleted.'}); });
+export default router;

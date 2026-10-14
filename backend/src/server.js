@@ -1,0 +1,35 @@
+import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import rateLimit from 'express-rate-limit';
+import authRoutes from './routes/auth.js';
+import subjectRoutes from './routes/subjects.js';
+import timetableRoutes from './routes/timetable.js';
+import sessionRoutes from './routes/sessions.js';
+import dashboardRoutes from './routes/dashboard.js';
+import notificationRoutes from './routes/notifications.js';
+import adminRoutes from './routes/admin.js';
+import { startReminderScheduler } from './services/reminderScheduler.js';
+
+const app = express();
+app.use(cors({ origin: process.env.CLIENT_ORIGIN?.split(',') || 'http://localhost:5173' }));
+app.use(express.json({ limit: '1mb' }));
+app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, limit: 300, standardHeaders: 'draft-7', legacyHeaders: false }));
+app.use('/api/auth', rateLimit({ windowMs: 15 * 60 * 1000, limit: 100 }), authRoutes);
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'AttendWise API' }));
+app.use('/api/subjects', subjectRoutes);
+app.use('/api/timetable', timetableRoutes);
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use((err, _req, res, _next) => {
+  console.error('Request failed:', err.name || 'Error', err.status || 500);
+  const status = err.status || 500;
+  res.status(status).json({ message: status < 500 ? err.message : 'Something went wrong. Please try again.' });
+});
+const port = process.env.PORT || 5000;
+if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is required. Copy backend/.env.example to backend/.env.');
+await mongoose.connect(process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/attendwise');
+app.listen(port, () => { console.log(`AttendWise API listening on http://localhost:${port}`); startReminderScheduler(); });

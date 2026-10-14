@@ -1,0 +1,4 @@
+import mongoose from 'mongoose';
+const sessionSchema = new mongoose.Schema({ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true }, subject: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true }, date: { type: String, required: true, index: true }, startTime: { type: String, required: true }, endTime: { type: String, required: true }, room: { type: String, default: '' }, status: { type: String, enum: ['scheduled', 'present', 'absent', 'cancelled'], default: 'scheduled' }, source: { type: String, enum: ['timetable', 'extra'], default: 'timetable' }, note: { type: String, default: '' }, slot: { type: mongoose.Schema.Types.ObjectId, ref: 'TimetableSlot', default: null } }, { timestamps: true });
+sessionSchema.index({ user: 1, date: 1, slot: 1 }, { unique: true, partialFilterExpression: { slot: { $type: 'objectId' } } });
+export default mongoose.model('ClassSession', sessionSchema);
